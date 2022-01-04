@@ -1,7 +1,9 @@
 #include <cstdio>
+#include <stdint.h>
+#include "loader.hpp"
 
 int main()
 {
-	printf("Hello world!\n");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("suzanne_medium.obj", "resources/mesh/");
 	return 0;
 }
