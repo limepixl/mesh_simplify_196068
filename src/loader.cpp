@@ -11,8 +11,9 @@ Triangle::Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, glm::vec3 &norma
 	this->v2 = v2;
 	this->normal = normal;
 
-	edge1 = v1 - v0;
-	edge2 = v2 - v0;
+	this->edge0 = {v0, v1};
+	this->edge1 = {v1, v2};
+	this->edge2 = {v2, v0};
 }
 
 std::vector<Triangle> LoadModelFromObj(const char *fileName, const char *path)
