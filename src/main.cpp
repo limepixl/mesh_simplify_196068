@@ -16,6 +16,15 @@ double CalculateCost(Edge &selected_edge, Edge &non_tri_edge, Edge &new_edge)
 	return fabs(l1 - l2);
 }
 
+inline double VectorSum(std::vector<double> &vec)
+{
+	double sum = 0.0;
+	for(int i = 0; i < vec.size(); i++)
+		sum += vec.at(i);
+
+	return sum;
+}
+
 int main()
 {
 	std::vector<Triangle> mesh_data = LoadModelFromObj("sphere.obj", "resources/mesh/");
@@ -98,6 +107,13 @@ int main()
 		return 0;
 	}
 
+	// Using lambda to compare elements.
+    auto cmp = [](Configuration &left, Configuration &right) 
+	{ 
+		return VectorSum(left.costs) > VectorSum(right.costs);
+	};
+    std::priority_queue<Configuration, std::vector<Configuration>, decltype(cmp)> queue(cmp);
+
 	// For each configuration, calculate the cost of removing each edge
 	for(Configuration &c : candidates)
 	{
@@ -140,6 +156,7 @@ int main()
 			if(tri_verts.size() != 2)
 			{
 				printf("ERROR: Didn't find 2 triangle vertices!\n");
+				system("pause");
 			}
 
 			Edge non_tri_edge {edge.v0, other_vertices.back()};
@@ -147,7 +164,12 @@ int main()
 
 			c.costs[i] = CalculateCost(edge, non_tri_edge, new_edge);
 		}
+
+		queue.push(c);
 	}
 	
+	printf("Successfully calculated edge costs and created the priority queue.\n");
+	
+	system("pause");
 	return 0;
 }
