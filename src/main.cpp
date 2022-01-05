@@ -29,13 +29,13 @@ int main()
 {
 	std::vector<Triangle> mesh_data = LoadModelFromObj("sphere.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
+	printf("Loaded:\n- %zu triangles\n", num_triangles);
 
 	std::vector<Edge> edges;
 	edges.reserve(num_triangles * 3);
 
-	for(uint64_t i = 0; i < num_triangles; i++)
+	for(Triangle &t : mesh_data)
 	{
-		Triangle &t = mesh_data[i];
 		if(std::find(edges.begin(), edges.end(), t.edge0) == edges.end() && 
 		   std::find(edges.begin(), edges.end(), -t.edge0) == edges.end())
 			edges.push_back(t.edge0);
@@ -48,6 +48,7 @@ int main()
 	}
 
 	size_t num_edges = edges.size();
+	printf("- %zu edges\n", num_edges);
 
 	typedef std::unordered_multimap<glm::vec3, glm::vec3> multimap_type;
 
@@ -101,11 +102,15 @@ int main()
 		num_vertices++;
 	}
 
+	printf("- %zu vertices\n", num_vertices);
+
 	if(candidates.empty())
 	{
 		printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
 		return 0;
 	}
+
+	printf("Found %zu valid configurations!\n", candidates.size());
 
 	// Using lambda to compare elements.
     auto cmp = [](Configuration &left, Configuration &right) 
@@ -169,7 +174,7 @@ int main()
 	}
 	
 	printf("Successfully calculated edge costs and created the priority queue.\n");
-	
+
 	system("pause");
 	return 0;
 }
