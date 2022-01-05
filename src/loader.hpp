@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 #include <vector>
 #include <string>
 
@@ -13,6 +14,25 @@ struct Edge
 	{
 		return v0 == e.v0 && v1 == e.v1;
 	}
+
+	double length()
+	{
+		glm::vec3 t = v1 - v0;
+		return glm::length(t);
+	}
+
+	Edge operator-()
+	{
+		return {v1, v0};
+	}
+};
+
+// NOTE: All edges have v0 as the center
+// vertex of the configuration
+struct Configuration
+{
+	std::vector<Edge> edges;
+	std::vector<double> costs;
 };
 
 struct Triangle
