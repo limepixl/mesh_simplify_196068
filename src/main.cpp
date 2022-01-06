@@ -85,6 +85,7 @@ int main()
 			{
 				tmp.edges.push_back({it->first, it->second});
 				tmp.costs.push_back(0);
+				tmp.new_edges.push_back({});
 				it++;
 			}
 
@@ -145,7 +146,7 @@ int main()
 
 			// Iterate over all values for given key v_out
 			std::pair<multimap_type::iterator, multimap_type::iterator> range = edge_multimap.equal_range(v_out);
-			int64_t q = std::distance(range.first, range.second);
+			// int64_t q = std::distance(range.first, range.second);
 			for (multimap_type::iterator it = range.first; it != range.second; it++)
 			{
 				glm::vec3 &v_tri = it->second;
@@ -166,6 +167,7 @@ int main()
 
 			Edge non_tri_edge {edge.v0, other_vertices.back()};
 			Edge new_edge {edge.v1, other_vertices.back()};
+			c.new_edges[i] = new_edge;
 
 			c.costs[i] = CalculateCost(edge, non_tri_edge, new_edge);
 		}
@@ -174,6 +176,48 @@ int main()
 	}
 	
 	printf("Successfully calculated edge costs and created the priority queue.\n");
+
+	// While the queue is full, process all candidate configurations!
+	uint32_t count = 0;
+	while(!queue.empty())
+	{
+		const Configuration c = queue.top();
+
+		// Apply vertex unify operator to the edge with the 
+		// lowest cost, within the selected configuration
+		int edge = -1;
+		double cost = (double)INFINITY;
+		for(int i = 0; i < 4; i++)
+		{
+			if(c.costs[i] < cost)
+			{
+				cost = c.costs[i];
+				edge = i;
+			}
+		}
+
+		Edge edge_to_unify = c.edges[edge];
+		Edge new_edge = c.new_edges[edge];
+
+		// Remove all edges and add the new edge
+		for(Edge e : c.edges)
+		{
+			auto it1 = std::find(edges.begin(), edges.end(), e);
+			if(it1 != edges.end())
+				edges.erase(std::find(edges.begin(), edges.end(), e));
+				
+			auto it2 = std::find(edges.begin(), edges.end(), -e);
+			if(it2 != edges.end())
+				edges.erase(std::find(edges.begin(), edges.end(), -e));
+
+		}
+		edges.push_back(new_edge);
+
+		queue.pop();
+		
+		printf("Processed configuration #%d\n", ++count);
+		printf("Number of edges currently: %zu\n", edges.size());
+	}
 
 	system("pause");
 	return 0;

@@ -9,7 +9,7 @@ Triangle::Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, glm::vec3 &norma
 	this->v0 = v0;
 	this->v1 = v1;
 	this->v2 = v2;
-	this->normal = normal;
+	// this->normal = normal;
 
 	this->edge0 = {v0, v1};
 	this->edge1 = {v1, v2};
