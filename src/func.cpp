@@ -70,7 +70,7 @@ void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multi
 				tmp.new_edges.push_back({});
 				it++;
 			}
-			
+
 			candidates.push_back(tmp);
 		}
 		else
@@ -88,8 +88,7 @@ void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multi
 	if(candidates.empty())
 	{
 		printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
-		system("pause");
-		exit(0);
+		return;
 	}
 	
 	printf("Found %zu potential configurations.\n", candidates.size());

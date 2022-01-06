@@ -4,6 +4,8 @@
 #include <queue>
 #include <algorithm>
 
+#include "exporter.hpp"
+
 // Using lambda to compare elements.
 auto cmp = [](Configuration &left, Configuration &right) 
 { 
@@ -178,7 +180,7 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 
 int main()
 {
-	std::vector<Triangle> mesh_data = LoadModelFromObj("test.obj", "resources/mesh/");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("suzanne_medium.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded:\n- %zu triangles\n", num_triangles);
 
@@ -215,6 +217,11 @@ int main()
 		size_t num_vertices = 0;
 		FindCandidates(candidates, edge_multimap, num_vertices);
 
+		if(candidates.empty())
+		{
+			break;
+		}
+
 		auto queue = CalculateConfigurationCost(candidates, edge_multimap);
 
 		if(!queue.empty())
@@ -227,6 +234,7 @@ int main()
 	}
 
 	// Generate the simplified mesh as its own obj
+	ExportToOBJ("simplified_mesh.obj", mesh_data);
 
 	system("pause");
 	return 0;
