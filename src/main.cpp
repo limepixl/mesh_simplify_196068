@@ -16,8 +16,10 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 	std::priority_queue<Configuration, std::vector<Configuration>, decltype(cmp)> queue(cmp);
 
 	// For each configuration, calculate the cost of removing each edge
-	for(Configuration &c : candidates)
+	for(size_t j = 0; j < candidates.size(); j++)
 	{
+		Configuration &c = candidates[j];
+
 		std::vector<glm::vec3> edge_vertices
 		{
 			c.edges[0].v1,
@@ -26,6 +28,7 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 			c.edges[3].v1,
 		};
 
+		bool valid = true;
 		for(int i = 0; i < 4; i++)
 		{
 			Edge &edge = c.edges[i];
@@ -56,8 +59,9 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 
 			if(tri_verts.size() != 2)
 			{
-				printf("ERROR: Didn't find 2 triangle vertices!\n");
-				system("pause");
+				// printf("Didn't find 2 triangle vertices! Configuration isn't valid.\n");
+				valid = false;
+				break;
 			}
 
 			Edge non_tri_edge {edge.v0, other_vertices.back()};
@@ -67,15 +71,22 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 			c.costs[i] = CalculateCost(edge, non_tri_edge, new_edge);
 		}
 
-		queue.push(c);
+		if(valid)
+			queue.push(c);
+		else
+			candidates.erase(candidates.begin() + j--);
 	}
 	
-	printf("Successfully calculated edge costs and created the priority queue.\n");
+	if(candidates.empty())
+		printf("None of them are valid. Queue is empty.\n");
+	else
+		printf("Successfully calculated edge costs and created the priority queue.\n");
+
 	return queue;
 }
 
 template<typename QueueType>
-void ProcessQueue(QueueType &queue, std::vector<Edge> &edges)
+void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triangle> &tris)
 {
 	// While the queue is full, process all candidate configurations!
 	uint32_t count = 0;
@@ -96,8 +107,53 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges)
 			}
 		}
 
-		Edge edge_to_unify = c.edges[edge];
 		Edge new_edge = c.new_edges[edge];
+
+		// Remove all trianges with the center vertex 
+		// being one of their vertices
+		int tri_count = 0;
+		glm::vec3 center_vert = c.edges[0].v0;
+		for(size_t i = 0; i < tris.size() && tri_count < 4; i++)
+		{
+			Triangle &t = tris[i];
+			if(t.v0 == center_vert ||
+			   t.v1 == center_vert ||
+			   t.v2 == center_vert)
+			{
+				tris.erase(tris.begin() + i--);
+				tri_count++;
+			}
+		}
+
+		if(tri_count != 4)
+		{
+			printf("ERROR FATMAGJULLLLLLL\n");
+		}
+
+		std::vector<glm::vec3> new_tri_points
+		{
+			c.edges[0].v1,
+			c.edges[1].v1,
+			c.edges[2].v1,
+			c.edges[3].v1,
+		};
+
+		{
+			auto it1 = std::find(new_tri_points.begin(), new_tri_points.end(), new_edge.v0);
+			if(it1 != new_tri_points.end())
+				new_tri_points.erase(it1);
+			else
+				printf("ERROR1\n");
+
+			auto it2 = std::find(new_tri_points.begin(), new_tri_points.end(), new_edge.v1);
+			if(it2 != new_tri_points.end())
+				new_tri_points.erase(it2);
+			else
+				printf("ERROR2\n");
+		}
+
+		tris.push_back(Triangle(new_tri_points[0], new_tri_points[1], new_edge.v0));
+		tris.push_back(Triangle(new_tri_points[0], new_tri_points[1], new_edge.v1));
 
 		// Remove all edges and add the new edge
 		for(Edge e : c.edges)
@@ -111,8 +167,8 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges)
 				edges.erase(std::find(edges.begin(), edges.end(), -e));
 
 		}
-		edges.push_back(new_edge);
 
+		edges.push_back(new_edge);
 		queue.pop();
 		
 		printf("Processed configuration #%d\n", ++count);
@@ -160,8 +216,17 @@ int main()
 		FindCandidates(candidates, edge_multimap, num_vertices);
 
 		auto queue = CalculateConfigurationCost(candidates, edge_multimap);
-		ProcessQueue(queue, edges);
+
+		if(!queue.empty())
+			ProcessQueue(queue, edges, mesh_data);
+		else
+		{
+			printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
+			break;
+		}
 	}
+
+	// Generate the simplified mesh as its own obj
 
 	system("pause");
 	return 0;

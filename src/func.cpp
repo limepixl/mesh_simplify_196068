@@ -48,7 +48,7 @@ void PopulateMultimap(std::unordered_multimap<glm::vec3, glm::vec3> &multimap, s
 void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multimap, size_t &num_vertices)
 {
 	printf("Looking for candidate configurations...\n");
-	
+
 	// Check each vertex if it has a valid configuration
 	// to be considered as the center vertex
 	for(multimap_type::iterator it = multimap.begin(); it != multimap.end(); )
@@ -70,7 +70,7 @@ void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multi
 				tmp.new_edges.push_back({});
 				it++;
 			}
-
+			
 			candidates.push_back(tmp);
 		}
 		else
@@ -92,5 +92,5 @@ void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multi
 		exit(0);
 	}
 	
-	printf("Found %zu valid configurations!\n", candidates.size());
+	printf("Found %zu potential configurations.\n", candidates.size());
 }

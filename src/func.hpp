@@ -10,7 +10,7 @@
 typedef std::unordered_multimap<glm::vec3, glm::vec3> multimap_type;
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/hash.hpp"
+#include <glm/gtx/hash.hpp>
 
 #include <queue>
 
@@ -41,6 +41,14 @@ struct Edge
 	}
 };
 
+struct Triangle
+{
+	glm::vec3 v0, v1, v2;
+	Edge edge0, edge1, edge2;
+
+	Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2);
+};
+
 // NOTE: All edges have v0 as the center
 // vertex of the configuration
 struct Configuration
@@ -48,14 +56,7 @@ struct Configuration
 	std::vector<Edge> edges;
 	std::vector<double> costs;
 	std::vector<Edge> new_edges;
-};
-
-struct Triangle
-{
-	glm::vec3 v0, v1, v2;
-	Edge edge0, edge1, edge2;
-
-	Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2);
+	std::vector<Triangle> triangles;
 };
 
 /* 
