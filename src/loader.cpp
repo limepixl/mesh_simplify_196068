@@ -4,18 +4,6 @@
 #include "../tinyobjloader/tiny_obj_loader.h"
 #include <glm/glm.hpp>
 
-Triangle::Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2, glm::vec3 &normal)
-{
-	this->v0 = v0;
-	this->v1 = v1;
-	this->v2 = v2;
-	// this->normal = normal;
-
-	this->edge0 = {v0, v1};
-	this->edge1 = {v1, v2};
-	this->edge2 = {v2, v0};
-}
-
 std::vector<Triangle> LoadModelFromObj(const char *fileName, const char *path)
 {
 	printf("Loading %s model from path: %s\n", fileName, path);
@@ -138,7 +126,7 @@ std::vector<Triangle> LoadModelFromObj(const char *fileName, const char *path)
 			glm::vec3 v0(vertex0[0], vertex0[1], vertex0[2]);
 			glm::vec3 v1(vertex1[0], vertex1[1], vertex1[2]);
 			glm::vec3 v2(vertex2[0], vertex2[1], vertex2[2]);
-			Triangle tri(v0, v1, v2, normal);
+			Triangle tri(v0, v1, v2);
 			tris.push_back(tri);
 		}
 	}

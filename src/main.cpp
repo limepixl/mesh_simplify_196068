@@ -1,124 +1,19 @@
 #include <cstdio>
 #include <stdint.h>
 #include "loader.hpp"
-#include <unordered_map>
-#include <map>
 #include <queue>
 #include <algorithm>
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/hash.hpp"
+// Using lambda to compare elements.
+auto cmp = [](Configuration &left, Configuration &right) 
+{ 
+	return VectorSum(left.costs) > VectorSum(right.costs);
+};
 
-double CalculateCost(Edge &selected_edge, Edge &non_tri_edge, Edge &new_edge)
+std::priority_queue<Configuration, std::vector<Configuration>, decltype(cmp)> 
+CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type &edge_multimap)
 {
-	double l1 = selected_edge.length() + non_tri_edge.length();
-	double l2 = new_edge.length();
-	return fabs(l1 - l2);
-}
-
-inline double VectorSum(std::vector<double> &vec)
-{
-	double sum = 0.0;
-	for(int i = 0; i < vec.size(); i++)
-		sum += vec.at(i);
-
-	return sum;
-}
-
-int main()
-{
-	std::vector<Triangle> mesh_data = LoadModelFromObj("sphere.obj", "resources/mesh/");
-	size_t num_triangles = mesh_data.size();
-	printf("Loaded:\n- %zu triangles\n", num_triangles);
-
-	std::vector<Edge> edges;
-	edges.reserve(num_triangles * 3);
-
-	for(Triangle &t : mesh_data)
-	{
-		if(std::find(edges.begin(), edges.end(), t.edge0) == edges.end() && 
-		   std::find(edges.begin(), edges.end(), -t.edge0) == edges.end())
-			edges.push_back(t.edge0);
-		if(std::find(edges.begin(), edges.end(), t.edge1) == edges.end() && 
-		   std::find(edges.begin(), edges.end(), -t.edge1) == edges.end())
-			edges.push_back(t.edge1);
-		if(std::find(edges.begin(), edges.end(), t.edge2) == edges.end() && 
-		   std::find(edges.begin(), edges.end(), -t.edge2) == edges.end())
-			edges.push_back(t.edge2);
-	}
-
-	size_t num_edges = edges.size();
-	printf("- %zu edges\n", num_edges);
-
-	typedef std::unordered_multimap<glm::vec3, glm::vec3> multimap_type;
-
-	// Create a map that, for any given vertex, returns all of 
-	// its neighbors (vertices connected to the current vertex
-	// by an edge). TODO: possibly only just use indices
-	multimap_type edge_multimap;
-	for(uint64_t i = 0; i < num_edges; i++)
-	{
-		Edge &edge = edges[i];
-		edge_multimap.insert({edge.v0, edge.v1});
-		edge_multimap.insert({edge.v1, edge.v0});
-	}
-	
-	// List of candidate center vertices
-	std::vector<Configuration> candidates;
-
-	// Check each vertex if it has a valid configuration
-	// to be considered as the center vertex
-	size_t num_vertices = 0;
-	for(multimap_type::iterator it = edge_multimap.begin(); it != edge_multimap.end(); )
-	{
-		glm::vec3 key = it->first;
-
-		// Number of vertices adjacent to key (center) vertex
-		size_t value_count = edge_multimap.count(key);
-
-		// Go to next key in the multimap
-		if(value_count == 4)
-		{
-			Configuration tmp;
-
-			while(it != edge_multimap.end() && key == it->first)
-			{
-				tmp.edges.push_back({it->first, it->second});
-				tmp.costs.push_back(0);
-				tmp.new_edges.push_back({});
-				it++;
-			}
-
-			candidates.push_back(tmp);
-		}
-		else
-		{
-			do
-			{
-				it++;
-			}
-			while(it != edge_multimap.end() && key == it->first);
-		}
-		
-		num_vertices++;
-	}
-
-	printf("- %zu vertices\n", num_vertices);
-
-	if(candidates.empty())
-	{
-		printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
-		return 0;
-	}
-
-	printf("Found %zu valid configurations!\n", candidates.size());
-
-	// Using lambda to compare elements.
-    auto cmp = [](Configuration &left, Configuration &right) 
-	{ 
-		return VectorSum(left.costs) > VectorSum(right.costs);
-	};
-    std::priority_queue<Configuration, std::vector<Configuration>, decltype(cmp)> queue(cmp);
+	std::priority_queue<Configuration, std::vector<Configuration>, decltype(cmp)> queue(cmp);
 
 	// For each configuration, calculate the cost of removing each edge
 	for(Configuration &c : candidates)
@@ -176,7 +71,12 @@ int main()
 	}
 	
 	printf("Successfully calculated edge costs and created the priority queue.\n");
+	return queue;
+}
 
+template<typename QueueType>
+void ProcessQueue(QueueType &queue, std::vector<Edge> &edges)
+{
 	// While the queue is full, process all candidate configurations!
 	uint32_t count = 0;
 	while(!queue.empty())
@@ -217,6 +117,50 @@ int main()
 		
 		printf("Processed configuration #%d\n", ++count);
 		printf("Number of edges currently: %zu\n", edges.size());
+	}
+}
+
+int main()
+{
+	std::vector<Triangle> mesh_data = LoadModelFromObj("test.obj", "resources/mesh/");
+	size_t num_triangles = mesh_data.size();
+	printf("Loaded:\n- %zu triangles\n", num_triangles);
+
+	std::vector<Edge> edges;
+	edges.reserve(num_triangles * 3);
+
+	for(Triangle &t : mesh_data)
+	{
+		if(std::find(edges.begin(), edges.end(), t.edge0) == edges.end() && 
+		   std::find(edges.begin(), edges.end(), -t.edge0) == edges.end())
+			edges.push_back(t.edge0);
+		if(std::find(edges.begin(), edges.end(), t.edge1) == edges.end() && 
+		   std::find(edges.begin(), edges.end(), -t.edge1) == edges.end())
+			edges.push_back(t.edge1);
+		if(std::find(edges.begin(), edges.end(), t.edge2) == edges.end() && 
+		   std::find(edges.begin(), edges.end(), -t.edge2) == edges.end())
+			edges.push_back(t.edge2);
+	}
+
+	size_t num_edges = edges.size();
+	printf("- %zu edges\n", num_edges);
+
+	while(true)
+	{
+		// Create a map that, for any given vertex, returns all of 
+		// its neighbors (vertices connected to the current vertex
+		// by an edge).
+		multimap_type edge_multimap;
+		PopulateMultimap(edge_multimap, edges);
+		
+		// List of candidate center vertices
+		std::vector<Configuration> candidates;
+
+		size_t num_vertices = 0;
+		FindCandidates(candidates, edge_multimap, num_vertices);
+
+		auto queue = CalculateConfigurationCost(candidates, edge_multimap);
+		ProcessQueue(queue, edges);
 	}
 
 	system("pause");
