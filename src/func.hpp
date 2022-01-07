@@ -67,3 +67,12 @@ double CalculateCost(Edge &selected_edge, Edge &non_tri_edge, Edge &new_edge);
 double VectorSum(std::vector<double> &vec);
 void PopulateMultimap(multimap_type &multimap, std::vector<Edge> &edges);
 void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multimap, size_t &num_vertices);
+
+inline glm::vec3 Abs(glm::vec3 vec)
+{
+	if(vec.x <= 0.0f) vec.x = -vec.x;
+	if(vec.y <= 0.0f) vec.y = -vec.y;
+	if(vec.z <= 0.0f) vec.z = -vec.z;
+
+	return vec;
+}

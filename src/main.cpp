@@ -5,6 +5,7 @@
 #include <algorithm>
 
 #include "exporter.hpp"
+#include <glm/gtc/epsilon.hpp>
 
 // Using lambda to compare elements.
 auto cmp = [](Configuration &left, Configuration &right) 
@@ -111,6 +112,8 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 
 		Edge new_edge = c.new_edges[edge];
 
+		glm::vec3 diff_vec(0.0001f, 0.0001f, 0.0001f);
+
 		// Remove all trianges with the center vertex 
 		// being one of their vertices
 		int tri_count = 0;
@@ -118,9 +121,12 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 		for(size_t i = 0; i < tris.size() && tri_count < 4; i++)
 		{
 			Triangle &t = tris[i];
-			if(t.v0 == center_vert ||
-			   t.v1 == center_vert ||
-			   t.v2 == center_vert)
+			glm::vec3 test1 = glm::abs(t.v0 - center_vert);
+			glm::vec3 test2 = glm::abs(t.v1 - center_vert);
+			glm::vec3 test3 = glm::abs(t.v2 - center_vert);
+			if(glm::all(glm::lessThanEqual(test1, diff_vec)) ||
+			   glm::all(glm::lessThanEqual(test2, diff_vec)) ||
+			   glm::all(glm::lessThanEqual(test3, diff_vec)))
 			{
 				tris.erase(tris.begin() + i--);
 				tri_count++;
@@ -129,7 +135,7 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 
 		if(tri_count != 4)
 		{
-			printf("ERROR FATMAGJULLLLLLL\n");
+			printf("ERROR! Found fewer than 4 tris\n");
 		}
 
 		std::vector<glm::vec3> new_tri_points
@@ -144,18 +150,14 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 			auto it1 = std::find(new_tri_points.begin(), new_tri_points.end(), new_edge.v0);
 			if(it1 != new_tri_points.end())
 				new_tri_points.erase(it1);
-			else
-				printf("ERROR1\n");
 
 			auto it2 = std::find(new_tri_points.begin(), new_tri_points.end(), new_edge.v1);
 			if(it2 != new_tri_points.end())
 				new_tri_points.erase(it2);
-			else
-				printf("ERROR2\n");
 		}
 
-		tris.push_back(Triangle(new_tri_points[0], new_tri_points[1], new_edge.v0));
-		tris.push_back(Triangle(new_tri_points[0], new_tri_points[1], new_edge.v1));
+		tris.push_back(Triangle(new_tri_points[0], new_edge.v0, new_edge.v1));
+		tris.push_back(Triangle(new_tri_points[1], new_edge.v0, new_edge.v1));
 
 		// Remove all edges and add the new edge
 		for(Edge e : c.edges)
@@ -173,14 +175,14 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 		edges.push_back(new_edge);
 		queue.pop();
 		
-		printf("Processed configuration #%d\n", ++count);
-		printf("Number of edges currently: %zu\n", edges.size());
+		// printf("Processed configuration #%d\n", ++count);
+		// printf("Number of edges currently: %zu\n", edges.size());
 	}
 }
 
 int main()
 {
-	std::vector<Triangle> mesh_data = LoadModelFromObj("suzanne_medium.obj", "resources/mesh/");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded:\n- %zu triangles\n", num_triangles);
 
