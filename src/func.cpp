@@ -1,5 +1,11 @@
 #include "func.hpp"
 
+bool Edge::operator==(const Edge& e)
+{
+	return glm::all(glm::epsilonEqual(v0, e.v0, 0.0000001f)) && glm::all(glm::epsilonEqual(v1, e.v1, 0.0000001f));
+}
+
+
 Triangle::Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2)
 {
 	this->v0 = v0;

@@ -1,4 +1,4 @@
 build
 *.exe
 build-linux
-simplified_mesh
+simplified_mesh.obj

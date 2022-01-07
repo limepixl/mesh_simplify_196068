@@ -21,7 +21,7 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 	// For each configuration, calculate the cost of removing each edge
 	for(size_t j = 0; j < candidates.size(); j++)
 	{
-		Configuration &c = candidates[j];
+		Configuration c = candidates[j];
 
 		std::vector<glm::vec3> edge_vertices
 		{
@@ -53,10 +53,11 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 				glm::vec3 &v_tri = it->second;
 				
 				// If it's in the configuration
-				if(v_tri != edge.v0 && std::find(other_vertices.begin(), other_vertices.end(), v_tri) != other_vertices.end())
+				auto it_o = std::find(other_vertices.begin(), other_vertices.end(), v_tri);
+				if(v_tri != edge.v0 && it_o != other_vertices.end())
 				{
 					tri_verts.push_back(v_tri);
-					other_vertices.erase(std::find(other_vertices.begin(), other_vertices.end(), v_tri));
+					other_vertices.erase(it_o);
 				}
 			}
 
@@ -65,6 +66,11 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 				// printf("Didn't find 2 triangle vertices! Configuration isn't valid.\n");
 				valid = false;
 				break;
+			}
+
+			if(other_vertices.size() > 1)
+			{
+				printf("ERROR!\n");
 			}
 
 			Edge non_tri_edge {edge.v0, other_vertices.back()};
@@ -95,7 +101,7 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 	uint32_t count = 0;
 	while(!queue.empty())
 	{
-		const Configuration c = queue.top();
+		Configuration c = queue.top();
 
 		// Apply vertex unify operator to the edge with the 
 		// lowest cost, within the selected configuration
@@ -112,8 +118,6 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 
 		Edge new_edge = c.new_edges[edge];
 
-		glm::vec3 diff_vec(0.0001f, 0.0001f, 0.0001f);
-
 		// Remove all trianges with the center vertex 
 		// being one of their vertices
 		int tri_count = 0;
@@ -121,12 +125,9 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 		for(size_t i = 0; i < tris.size() && tri_count < 4; i++)
 		{
 			Triangle &t = tris[i];
-			glm::vec3 test1 = glm::abs(t.v0 - center_vert);
-			glm::vec3 test2 = glm::abs(t.v1 - center_vert);
-			glm::vec3 test3 = glm::abs(t.v2 - center_vert);
-			if(glm::all(glm::lessThanEqual(test1, diff_vec)) ||
-			   glm::all(glm::lessThanEqual(test2, diff_vec)) ||
-			   glm::all(glm::lessThanEqual(test3, diff_vec)))
+			if(glm::all(glm::epsilonEqual(t.v0, center_vert, 0.000001f)) ||
+			   glm::all(glm::epsilonEqual(t.v1, center_vert, 0.000001f)) ||
+			   glm::all(glm::epsilonEqual(t.v2, center_vert, 0.000001f)))
 			{
 				tris.erase(tris.begin() + i--);
 				tri_count++;
@@ -143,7 +144,7 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 			c.edges[0].v1,
 			c.edges[1].v1,
 			c.edges[2].v1,
-			c.edges[3].v1,
+			c.edges[3].v1
 		};
 
 		{
@@ -184,8 +185,10 @@ int main()
 {
 	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
-	printf("Loaded:\n- %zu triangles\n", num_triangles);
+	printf("Loaded %zu triangles.\n", num_triangles);
 
+	printf("Finding unique edges...\n");
+	
 	std::vector<Edge> edges;
 	edges.reserve(num_triangles * 3);
 
@@ -203,7 +206,7 @@ int main()
 	}
 
 	size_t num_edges = edges.size();
-	printf("- %zu edges\n", num_edges);
+	printf("Loaded %zu edges.\n", num_edges);
 
 	while(true)
 	{

@@ -24,11 +24,8 @@ struct Edge
 	glm::vec3 v1;
 
 	Edge() = default;
-	bool operator==(const Edge& e)
-	{
-		return v0 == e.v0 && v1 == e.v1;
-	}
-
+	bool operator==(const Edge& e);
+	
 	double length()
 	{
 		glm::vec3 t = v1 - v0;
@@ -47,6 +44,11 @@ struct Triangle
 	Edge edge0, edge1, edge2;
 
 	Triangle(glm::vec3 &v0, glm::vec3 &v1, glm::vec3 &v2);
+
+	bool operator==(const Triangle &t)
+	{
+		return v0 == t.v0 && v1 == t.v1 && v2 == t.v2 && edge0 == t.edge0 && edge1 == t.edge1 && edge2 == t.edge2;
+	}
 };
 
 // NOTE: All edges have v0 as the center
