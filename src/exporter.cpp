@@ -4,6 +4,7 @@
 
 #include <glm/glm.hpp>
 #include <unordered_set>
+#include <algorithm>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/hash.hpp>
