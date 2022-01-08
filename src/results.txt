@@ -1,0 +1,5 @@
+happy.obj: 91010
+Ficus.obj: 171930
+suzanne_medium.obj: 15722
+medieval-house.obj:	117405
+stanford-bunny.obj:	68717

@@ -7,3 +7,4 @@ compiler_flags="-O2 -g3 -I ../glm -I ../tinyobjloader -Wall -Wextra -Werror -Wno
 files="../src/*.cpp ../tinyobjloader/*.cc"
 
 clang++ $compiler_flags $files -o mesh_simplify
+echo "Build finished"
