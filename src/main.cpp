@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "loader.hpp"
 #include <queue>
+#include <ctime>
 #include <algorithm>
 
 #include "exporter.hpp"
@@ -244,7 +245,9 @@ std::vector<Triangle> ProcessNode(std::vector<Triangle> chunk_data)
 
 int main()
 {
-	std::vector<Triangle> mesh_data = LoadModelFromObj("Ficus.obj", "resources/mesh/");
+	time_t start_time = time(NULL);
+
+	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded %zu triangles.\n", num_triangles);
 
@@ -318,6 +321,8 @@ int main()
 	// Generate the simplified mesh as its own obj
 	ExportToOBJ("simplified_mesh.obj", mesh_data);
 
+	time_t end_time = time(NULL);
+	printf("Finished everything in %lu seconds.\n", end_time - start_time);
 	system("pause");
 	return 0;
 }
