@@ -1,0 +1,11 @@
+Sequential version:
+Ficus.obj			:	184,438 ->	XXXXXX		~XXXXX% reduction
+medieval-house.obj	:	162,937	->	XXXXXX		~XXXXX% reduction
+happy.obj			:	98,601  ->	XXXXXX		~XXXXX% reduction
+stanford-bunny.obj	:	69,451	->	XXXXXX		~XXXXX% reduction
+
+Parallel version:
+Ficus.obj			:	184,438 ->	181,142		~ 1.79% reduction
+medieval-house.obj	:	162,937	->	130,810		~19.72% reduction
+happy.obj			:	98,601  ->	91,745		~ 6.95% reduction
+stanford-bunny.obj	:	69,451	->	69,145		~ 0.44% reduction

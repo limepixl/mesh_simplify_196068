@@ -3,4 +3,4 @@
 #include <bvh/triangle.hpp>
 #include <bvh/bvh.hpp>
 
-bvh::Bvh<float> BuildBVH(std::vector<bvh::Triangle<float>> &triangles);
+bvh::Bvh<float> BuildBVH(std::vector<bvh::Triangle<float>> &triangles, int iteration);

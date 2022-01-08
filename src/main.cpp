@@ -90,12 +90,12 @@ CalculateConfigurationCost(std::vector<Configuration> &candidates, multimap_type
 		else
 			candidates.erase(candidates.begin() + j--);
 	}
-	
+	/*
 	if(candidates.empty())
 		printf("None of them are valid. Queue is empty.\n");
 	else
 		printf("Successfully calculated edge costs and created the priority queue.\n");
-
+	*/
 	return queue;
 }
 
@@ -244,70 +244,75 @@ std::vector<Triangle> ProcessNode(std::vector<Triangle> chunk_data)
 
 int main()
 {
-	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("Ficus.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded %zu triangles.\n", num_triangles);
 
-	// Convert own Triangle to bvh::Triangle 
-	std::vector<bvh::Triangle<float>> primitives;
-	primitives.reserve(num_triangles);
-	
-	for(Triangle &t : mesh_data)
+	for(int i = 0; i < 3; i++)
 	{
-		bvh::Vector3<float> tmp_v0(t.v0.x, t.v0.y, t.v0.z);
-		bvh::Vector3<float> tmp_v1(t.v1.x, t.v1.y, t.v1.z);
-		bvh::Vector3<float> tmp_v2(t.v2.x, t.v2.y, t.v2.z);
-		bvh::Triangle<float> tmp_tri(tmp_v0, tmp_v1, tmp_v2);
-		primitives.push_back(tmp_tri);
-	}
+		printf("Iteration %d\n", i);
 
-	// Compute BVH using mesh tris
-	std::vector<bvh::Bvh<float>::Node> nodes;
-	bvh::Bvh<float> bvh_complete = BuildBVH(primitives);
-	for(size_t node_index = 0; node_index < bvh_complete.node_count; node_index++)
-	{
-		auto node = bvh_complete.nodes.get()[node_index];
-		if(node.is_leaf())
-		{
-			nodes.push_back(node);
-		}
-	}
-
-	// Create a thread pool with as many threads
-	// as the current hardware can handle (minus
-	// the main thread to be used for joining)
-	thread_pool pool(std::thread::hardware_concurrency() - 1);
-
-	// Dispatch tasks
-	std::vector<std::future<std::vector<Triangle>>> futures;
-	for(auto &node : nodes)
-	{
-		std::vector<Triangle> node_tris;
-		node_tris.reserve(node.primitive_count);
-
-		for(uint64_t pi = node.first_child_or_primitive; 
-			pi < node.first_child_or_primitive + node.primitive_count; 
-			pi++)
-		{
-			bvh::Triangle<float> tmp_tri = primitives[pi];
-			glm::vec3 v0(tmp_tri.p0.values[0]  , tmp_tri.p0.values[1]  , tmp_tri.p0.values[2]  );
-			glm::vec3 v1(tmp_tri.p1().values[0], tmp_tri.p1().values[1], tmp_tri.p1().values[2]);
-			glm::vec3 v2(tmp_tri.p2().values[0], tmp_tri.p2().values[1], tmp_tri.p2().values[2]);
-			node_tris.emplace_back(v0, v1, v2);
-		}
+		// Convert own Triangle to bvh::Triangle 
+		std::vector<bvh::Triangle<float>> primitives;
+		primitives.reserve(num_triangles);
 		
-		futures.push_back(pool.submit(ProcessNode, node_tris));
-	}
+		for(Triangle &t : mesh_data)
+		{
+			bvh::Vector3<float> tmp_v0(t.v0.x, t.v0.y, t.v0.z);
+			bvh::Vector3<float> tmp_v1(t.v1.x, t.v1.y, t.v1.z);
+			bvh::Vector3<float> tmp_v2(t.v2.x, t.v2.y, t.v2.z);
+			bvh::Triangle<float> tmp_tri(tmp_v0, tmp_v1, tmp_v2);
+			primitives.push_back(tmp_tri);
+		}
 
-	// Wait for all tasks to be finished
-	pool.wait_for_tasks();
+		// Compute BVH using mesh tris
+		std::vector<bvh::Bvh<float>::Node> nodes;
+		bvh::Bvh<float> bvh_complete = BuildBVH(primitives, i);
+		for(size_t node_index = 0; node_index < bvh_complete.node_count; node_index++)
+		{
+			auto node = bvh_complete.nodes.get()[node_index];
+			if(node.is_leaf())
+			{
+				nodes.push_back(node);
+			}
+		}
 
-	// Collect all tris from every chunk
-	mesh_data.clear();
-	for(auto &future : futures)
-	{
-		auto vec = future.get();
-		mesh_data.insert(mesh_data.end(), vec.begin(), vec.end());
+		// Create a thread pool with as many threads
+		// as the current hardware can handle (minus
+		// the main thread to be used for joining)
+		thread_pool pool(std::thread::hardware_concurrency() - 1);
+
+		// Dispatch tasks
+		std::vector<std::future<std::vector<Triangle>>> futures;
+		for(auto &node : nodes)
+		{
+			std::vector<Triangle> node_tris;
+			node_tris.reserve(node.primitive_count);
+
+			for(uint64_t pi = node.first_child_or_primitive; 
+				pi < node.first_child_or_primitive + node.primitive_count; 
+				pi++)
+			{
+				bvh::Triangle<float> tmp_tri = primitives[pi];
+				glm::vec3 v0(tmp_tri.p0.values[0]  , tmp_tri.p0.values[1]  , tmp_tri.p0.values[2]  );
+				glm::vec3 v1(tmp_tri.p1().values[0], tmp_tri.p1().values[1], tmp_tri.p1().values[2]);
+				glm::vec3 v2(tmp_tri.p2().values[0], tmp_tri.p2().values[1], tmp_tri.p2().values[2]);
+				node_tris.emplace_back(v0, v1, v2);
+			}
+			
+			futures.push_back(pool.submit(ProcessNode, node_tris));
+		}
+
+		// Wait for all tasks to be finished
+		pool.wait_for_tasks();
+
+		// Collect all tris from every chunk
+		mesh_data.clear();
+		for(auto &future : futures)
+		{
+			auto vec = future.get();
+			mesh_data.insert(mesh_data.end(), vec.begin(), vec.end());
+		}
 	}
 
 	// Generate the simplified mesh as its own obj

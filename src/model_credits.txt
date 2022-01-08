@@ -1,0 +1,4 @@
+- Medieval House from BlendSwap, by user Gorgious, CC-0 (https://blendswap.com/blend/29435)
+- Ficus plant from BlendSwap, by user Herberhold, CC-0 (https://blendswap.com/blend/23125)
+- Suzanne models upscaled from default Suzanne version in Blender (https://blender.org)
+- Happy Buddha, Bunny, from McGuire Computer Graphics Archive (https://casual-effects.com/data)
