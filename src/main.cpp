@@ -247,7 +247,7 @@ int main()
 {
 	time_t start_time = time(NULL);
 
-	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("stanford-bunny.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded %zu triangles.\n", num_triangles);
 
@@ -322,7 +322,7 @@ int main()
 	ExportToOBJ("simplified_mesh.obj", mesh_data);
 
 	time_t end_time = time(NULL);
-	printf("Finished everything in %lu seconds.\n", end_time - start_time);
+	printf("Finished everything in %lu seconds.\n", (unsigned long)(end_time - start_time));
 	system("pause");
 	return 0;
 }
