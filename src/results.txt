@@ -1,11 +1,11 @@
 Sequential version:
-Ficus.obj			:	184,438 ->	171,930		~ 6.78% reduction
-medieval-house.obj	:	162,937	->	117,405		~27.94% reduction
-happy.obj			:	98,601  ->	91,010		~ 7.70% reduction
-stanford-bunny.obj	:	69,451	->	68,717		~ 1.06% reduction
+Ficus.obj			:	184,438 ->	171,930		~ 6.78% reduction	667s
+medieval-house.obj	:	162,937	->	117,405		~27.94% reduction	612s
+happy.obj			:	98,601  ->	91,010		~ 7.70% reduction	173s
+stanford-bunny.obj	:	69,451	->	68,717		~ 1.06% reduction   69s
 
 Parallel version:
-Ficus.obj			:	184,438 ->	181,142		~ 1.79% reduction
-medieval-house.obj	:	162,937	->	130,810		~19.72% reduction
-happy.obj			:	98,601  ->	91,745		~ 6.95% reduction
-stanford-bunny.obj	:	69,451	->	69,145		~ 0.44% reduction
+Ficus.obj			:	184,438 ->	181,142		~ 1.79% reduction	89s
+medieval-house.obj	:	162,937	->	130,810		~19.72% reduction	168s
+happy.obj			:	98,601  ->	91,745		~ 6.95% reduction	17s
+stanford-bunny.obj	:	69,451	->	69,145		~ 0.44% reduction	10s
