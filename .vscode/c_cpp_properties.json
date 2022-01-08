@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/*",
                 "${workspaceFolder}/glm",
-                "${workspaceFolder}/tinyobjloader"
+                "${workspaceFolder}/tinyobjloader",
+                "${workspaceFolder}/bvh/include"
             ],
             "defines": [
                 "_DEBUG",

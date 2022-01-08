@@ -5,7 +5,10 @@
 #include <algorithm>
 
 #include "exporter.hpp"
+#include "bvh_utils.hpp"
 #include <glm/gtc/epsilon.hpp>
+
+#define NUM_THREADS 10
 
 // Using lambda to compare elements.
 auto cmp = [](Configuration &left, Configuration &right) 
@@ -183,9 +186,34 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 
 int main()
 {
-	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("suzanne_medium.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded %zu triangles.\n", num_triangles);
+
+	// Convert own Triangle to bvh::Triangle 
+	std::vector<bvh::Triangle<float>> primitives;
+	primitives.reserve(num_triangles);
+	
+	for(Triangle &t : mesh_data)
+	{
+		bvh::Vector3<float> tmp_v0(t.v0.x, t.v0.y, t.v0.z);
+		bvh::Vector3<float> tmp_v1(t.v1.x, t.v1.y, t.v1.z);
+		bvh::Vector3<float> tmp_v2(t.v2.x, t.v2.y, t.v2.z);
+		bvh::Triangle<float> tmp_tri(tmp_v0, tmp_v1, tmp_v2);
+		primitives.push_back(tmp_tri);
+	}
+
+	// Compute BVH using mesh tris
+	std::vector<bvh::Bvh<float>::Node> nodes;
+	bvh::Bvh<float> bvh_complete = BuildBVH(primitives);
+	for(size_t node_index = 0; node_index < bvh_complete.node_count; node_index++)
+	{
+		auto node = bvh_complete.nodes.get()[node_index];
+		if(node.is_leaf())
+		{
+			nodes.push_back(node);
+		}
+	}
 
 	printf("Finding unique edges...\n");
 	
