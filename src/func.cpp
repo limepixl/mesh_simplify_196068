@@ -48,12 +48,12 @@ void PopulateMultimap(std::unordered_multimap<glm::vec3, glm::vec3> &multimap, s
 		multimap.insert({edge.v1, edge.v0});
 	}
 
-	printf("Populated multimap with current edges.\n");
+	// printf("Populated multimap with current edges.\n");
 }
 
 void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multimap, size_t &num_vertices)
 {
-	printf("Looking for candidate configurations...\n");
+	// printf("Looking for candidate configurations...\n");
 
 	// Check each vertex if it has a valid configuration
 	// to be considered as the center vertex
@@ -93,9 +93,9 @@ void FindCandidates(std::vector<Configuration> &candidates, multimap_type &multi
 
 	if(candidates.empty())
 	{
-		printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
+		// printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
 		return;
 	}
 	
-	printf("Found %zu potential configurations.\n", candidates.size());
+	// printf("Found %zu potential configurations.\n", candidates.size());
 }

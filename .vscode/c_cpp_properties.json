@@ -24,7 +24,8 @@
             "includePath": [
                 "${workspaceFolder}/*",
                 "${workspaceFolder}/glm/",
-                "${workspaceFolder}/tinyobjloader"
+                "${workspaceFolder}/tinyobjloader",
+				"${workspaceFolder}/thread-pool"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

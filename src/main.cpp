@@ -8,6 +8,8 @@
 #include "bvh_utils.hpp"
 #include <glm/gtc/epsilon.hpp>
 
+#include "../thread-pool/thread_pool.hpp"
+
 #define NUM_THREADS 10
 
 // Using lambda to compare elements.
@@ -139,7 +141,7 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 
 		if(tri_count != 4)
 		{
-			printf("ERROR! Found fewer than 4 tris\n");
+			// printf("ERROR! Found fewer than 4 tris\n");
 		}
 
 		std::vector<glm::vec3> new_tri_points
@@ -184,9 +186,65 @@ void ProcessQueue(QueueType &queue, std::vector<Edge> &edges, std::vector<Triang
 	}
 }
 
+std::vector<Triangle> ProcessNode(std::vector<Triangle> chunk_data)
+{
+	// printf("Finding unique edges...\n");
+	
+	std::vector<Edge> edges;
+	edges.reserve(chunk_data.size() * 3);
+
+	for(Triangle &t : chunk_data)
+	{
+		if(std::find(edges.begin(), edges.end(), t.edge0) == edges.end() && 
+		   std::find(edges.begin(), edges.end(), -t.edge0) == edges.end())
+			edges.push_back(t.edge0);
+		if(std::find(edges.begin(), edges.end(), t.edge1) == edges.end() && 
+		   std::find(edges.begin(), edges.end(), -t.edge1) == edges.end())
+			edges.push_back(t.edge1);
+		if(std::find(edges.begin(), edges.end(), t.edge2) == edges.end() && 
+		   std::find(edges.begin(), edges.end(), -t.edge2) == edges.end())
+			edges.push_back(t.edge2);
+	}
+
+	size_t num_edges = edges.size();
+	// printf("Loaded %zu edges.\n", num_edges);
+
+	while(true)
+	{
+		// Create a map that, for any given vertex, returns all of 
+		// its neighbors (vertices connected to the current vertex
+		// by an edge).
+		multimap_type edge_multimap;
+		PopulateMultimap(edge_multimap, edges);
+		
+		// List of candidate center vertices
+		std::vector<Configuration> candidates;
+
+		size_t num_vertices = 0;
+		FindCandidates(candidates, edge_multimap, num_vertices);
+
+		if(candidates.empty())
+		{
+			break;
+		}
+
+		auto queue = CalculateConfigurationCost(candidates, edge_multimap);
+
+		if(!queue.empty())
+			ProcessQueue(queue, edges, chunk_data);
+		else
+		{
+			// printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
+			break;
+		}
+	}
+
+	return chunk_data;
+}
+
 int main()
 {
-	std::vector<Triangle> mesh_data = LoadModelFromObj("suzanne_medium.obj", "resources/mesh/");
+	std::vector<Triangle> mesh_data = LoadModelFromObj("happy.obj", "resources/mesh/");
 	size_t num_triangles = mesh_data.size();
 	printf("Loaded %zu triangles.\n", num_triangles);
 
@@ -215,55 +273,41 @@ int main()
 		}
 	}
 
-	printf("Finding unique edges...\n");
-	
-	std::vector<Edge> edges;
-	edges.reserve(num_triangles * 3);
+	// Create a thread pool with as many threads
+	// as the current hardware can handle (minus
+	// the main thread to be used for joining)
+	thread_pool pool(std::thread::hardware_concurrency() - 1);
 
-	for(Triangle &t : mesh_data)
+	// Dispatch tasks
+	std::vector<std::future<std::vector<Triangle>>> futures;
+	for(auto &node : nodes)
 	{
-		if(std::find(edges.begin(), edges.end(), t.edge0) == edges.end() && 
-		   std::find(edges.begin(), edges.end(), -t.edge0) == edges.end())
-			edges.push_back(t.edge0);
-		if(std::find(edges.begin(), edges.end(), t.edge1) == edges.end() && 
-		   std::find(edges.begin(), edges.end(), -t.edge1) == edges.end())
-			edges.push_back(t.edge1);
-		if(std::find(edges.begin(), edges.end(), t.edge2) == edges.end() && 
-		   std::find(edges.begin(), edges.end(), -t.edge2) == edges.end())
-			edges.push_back(t.edge2);
+		std::vector<Triangle> node_tris;
+		node_tris.reserve(node.primitive_count);
+
+		for(uint64_t pi = node.first_child_or_primitive; 
+			pi < node.first_child_or_primitive + node.primitive_count; 
+			pi++)
+		{
+			bvh::Triangle<float> tmp_tri = primitives[pi];
+			glm::vec3 v0(tmp_tri.p0.values[0]  , tmp_tri.p0.values[1]  , tmp_tri.p0.values[2]  );
+			glm::vec3 v1(tmp_tri.p1().values[0], tmp_tri.p1().values[1], tmp_tri.p1().values[2]);
+			glm::vec3 v2(tmp_tri.p2().values[0], tmp_tri.p2().values[1], tmp_tri.p2().values[2]);
+			node_tris.emplace_back(v0, v1, v2);
+		}
+		
+		futures.push_back(pool.submit(ProcessNode, node_tris));
 	}
 
-	size_t num_edges = edges.size();
-	printf("Loaded %zu edges.\n", num_edges);
+	// Wait for all tasks to be finished
+	pool.wait_for_tasks();
 
-	while(true)
+	// Collect all tris from every chunk
+	mesh_data.clear();
+	for(auto &future : futures)
 	{
-		// Create a map that, for any given vertex, returns all of 
-		// its neighbors (vertices connected to the current vertex
-		// by an edge).
-		multimap_type edge_multimap;
-		PopulateMultimap(edge_multimap, edges);
-		
-		// List of candidate center vertices
-		std::vector<Configuration> candidates;
-
-		size_t num_vertices = 0;
-		FindCandidates(candidates, edge_multimap, num_vertices);
-
-		if(candidates.empty())
-		{
-			break;
-		}
-
-		auto queue = CalculateConfigurationCost(candidates, edge_multimap);
-
-		if(!queue.empty())
-			ProcessQueue(queue, edges, mesh_data);
-		else
-		{
-			printf("The mesh cannot be simplified any more, using a vertex unify operator.\n");
-			break;
-		}
+		auto vec = future.get();
+		mesh_data.insert(mesh_data.end(), vec.begin(), vec.end());
 	}
 
 	// Generate the simplified mesh as its own obj

@@ -73,6 +73,7 @@
 		"optional": "cpp",
 		"random": "cpp",
 		"ratio": "cpp",
-		"stack": "cpp"
+		"stack": "cpp",
+		"thread": "cpp"
 	}
 }

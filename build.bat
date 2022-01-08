@@ -9,7 +9,7 @@ set "files=../src/main.cpp ../src/loader.cpp ../src/func.cpp ../src/exporter.cpp
 @REM cl %compiler_flags% %files% /link -opt:ref /out:mesh_simplify.exe
 
 @REM Clang
-set "compiler_flags=-O0 -g3 -std=c++17 -Wall -Wextra -Werror -Wno-missing-braces -Wno-unused-variable -Wno-missing-field-initializers -D_CRT_SECURE_NO_WARNINGS -I ../glm -I ../bvh/include"
+set "compiler_flags=-O2 -g3 -std=c++17 -Wall -Wextra -Werror -fopenmp=libomp -Wno-missing-braces -Wno-unused-variable -Wno-missing-field-initializers -D_CRT_SECURE_NO_WARNINGS -I ../glm -I ../bvh/include -I thread-pool"
 clang++ %compiler_flags% %files% -o mesh_simplify.exe
 
 popd

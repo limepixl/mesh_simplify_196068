@@ -10,7 +10,7 @@ bvh::Bvh<float> BuildBVH(std::vector<bvh::Triangle<float>> &triangles)
 
     // Create an acceleration data structure on the primitives
     bvh::SweepSahBuilder<bvh::Bvh<float>> builder(bvh);
-	builder.max_depth = 5; // TODO: play around with this parameter
+	builder.max_depth = 3; // TODO: play around with this parameter
     builder.build(global_bbox, bboxes.get(), centers.get(), triangles.size());
 
 	return bvh;
